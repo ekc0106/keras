@@ -283,11 +283,11 @@ evaluate <-
     dec_input <-
       k_expand_dims(list(word2index("<start>", target_index)))
     
-    for (t in seq_len(target_maxlen - 1)) {
+    for (t in seq_len(target_maxlen) - 1) {
       c(preds, dec_hidden, attention_weights) %<-%
         decoder(list(dec_input, dec_hidden, enc_output))
       attention_weights <- k_reshape(attention_weights, c(-1))
-      attention_matrix[t,] <- attention_weights %>% as.double()
+      attention_matrix[t+1,] <- attention_weights %>% as.double()
       
       pred_idx <-
         tf$compat$v1$multinomial(k_exp(preds), num_samples = 1L)[1, 1] %>% as.double()
@@ -368,12 +368,12 @@ for (epoch in seq_len(n_epochs)) {
         ), batch_size))
       
       
-      for (t in seq_len(target_maxlen - 1)) {
+      for (t in seq_len(target_maxlen) - 1) {
         c(preds, dec_hidden, weights) %<-%
           decoder(list(dec_input, dec_hidden, enc_output))
-        loss <- loss + cx_loss(y[, t], preds)
+        loss <- loss + cx_loss(y[, t+1], preds)
         
-        dec_input <- k_expand_dims(y[, t])
+        dec_input <- k_expand_dims(y[, t+1])
       }
     })
     total_loss <-
